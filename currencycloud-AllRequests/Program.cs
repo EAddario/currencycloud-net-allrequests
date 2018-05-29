@@ -21,15 +21,18 @@ namespace AllRequests
 
             try
             {
+                Console.WriteLine("Login ID: {0} | API Key {1}", loginId, apiKey);
                 var token = await client.InitializeAsync(ApiServer.Demo, loginId, apiKey);
                 Console.WriteLine("Token: {0}", token);
                 isAuthenticated = true;
 
-                var mutable = true;
+                var reverse = false;
                 Account mainAccount = null;
                 Account subAccount = null;
                 Beneficiary beneficiary = null;
                 Conversion conversion = null;
+                Payment payment = null;
+                Settlement settlement = null;
 
                 #region Accounts API
 
@@ -52,35 +55,32 @@ namespace AllRequests
                     var retrieveAccount = await client.GetAccountAsync(mainAccount.Id);
                     Console.WriteLine(retrieveAccount.ToJSON());
 
-                    if (mutable)
+                    Console.WriteLine(Environment.NewLine + "Create Account:");
+                    var createAccount = await client.CreateAccountAsync(new Account
                     {
-                        Console.WriteLine(Environment.NewLine + "Create Account:");
-                        var createAccount = await client.CreateAccountAsync(new Account
-                        {
-                            AccountName = "Currencycloud Development",
-                            LegalEntityType = "individual",
-                            Street = "12 Steward St",
-                            City = "London",
-                            PostalCode = "E1 6FQ",
-                            Country = "GB",
-                            ApiTrading = true,
-                            OnlineTrading = true,
-                            PhoneTrading = true
-                        });
-                        Console.WriteLine(createAccount.ToJSON());
+                        AccountName = "Currencycloud Development",
+                        LegalEntityType = "individual",
+                        Street = "12 Steward St",
+                        City = "London",
+                        PostalCode = "E1 6FQ",
+                        Country = "GB",
+                        ApiTrading = true,
+                        OnlineTrading = true,
+                        PhoneTrading = true
+                    });
+                    Console.WriteLine(createAccount.ToJSON());
 
-                        subAccount = createAccount;
+                    subAccount = createAccount;
 
-                        Console.WriteLine(Environment.NewLine + "Update Account:");
-                        var updateAccount = await client.UpdateAccountAsync(new Account
-                        {
-                            Id = subAccount.Id,
-                            YourReference = "CCY-" + new Random().Next(1000, 10000) + "-" + RandomChars(4),
-                            IdentificationType = "passport",
-                            IdentificationValue = RandomChars(10)
-                        });
-                        Console.WriteLine(updateAccount.ToJSON());
-                    }
+                    Console.WriteLine(Environment.NewLine + "Update Account:");
+                    var updateAccount = await client.UpdateAccountAsync(new Account
+                    {
+                        Id = subAccount.Id,
+                        YourReference = "CCY-" + new Random().Next(1000, 10000) + "-" + RandomChars(4),
+                        IdentificationType = "passport",
+                        IdentificationValue = RandomChars(10)
+                    });
+                    Console.WriteLine(updateAccount.ToJSON());
                 }
                 catch (ApiException e)
                 {
@@ -141,28 +141,26 @@ namespace AllRequests
                     var validateBeneficiary = await client.ValidateBeneficiaryAsync(beneficiary);
                     Console.WriteLine(validateBeneficiary.ToJSON());
 
-                    if (mutable)
+                    beneficiary.BankAccountHolderName = "Dame Tamara Carlton";
+                    beneficiary.Name = "Fulcrum Fund";
+                    Console.WriteLine(Environment.NewLine + "Create Beneficiary:");
+                    var createBeneficiary = await client.CreateBeneficiaryAsync(beneficiary);
+                    Console.WriteLine(createBeneficiary.ToJSON());
+
+                    beneficiary = createBeneficiary;
+
+                    beneficiary = new Beneficiary
                     {
-                        beneficiary.BankAccountHolderName = "Dame Tamara Carlton";
-                        beneficiary.Name = "Fulcrum Fund";
-                        Console.WriteLine(Environment.NewLine + "Create Beneficiary:");
-                        var createBeneficiary = await client.CreateBeneficiaryAsync(beneficiary);
-                        Console.WriteLine(createBeneficiary.ToJSON());
+                        Id = createBeneficiary.Id,
+                        BeneficiaryFirstName = "Tamara",
+                        BeneficiaryLastName = "Carlton",
+                        Email = "development@currencycloud.com",
+                        //PaymentTypes = new [] {"regular", "priority"}
+                    };
+                    Console.WriteLine(Environment.NewLine + "Update Beneficiary:");
+                    var updateBeneficiary = await client.UpdateBeneficiaryAsync(beneficiary);
+                    Console.WriteLine(updateBeneficiary.ToJSON());
 
-                        beneficiary = new Beneficiary
-                        {
-                            Id = createBeneficiary.Id,
-                            BeneficiaryFirstName = "Tamara",
-                            BeneficiaryLastName = "Carlton",
-                            Email = "development@currencycloud.com",
-                            //PaymentTypes = new [] {"regular", "priority"}
-                        };
-                        Console.WriteLine(Environment.NewLine + "Update Beneficiary:");
-                        var updateBeneficiary = await client.UpdateBeneficiaryAsync(beneficiary);
-                        Console.WriteLine(updateBeneficiary.ToJSON());
-
-                        beneficiary = createBeneficiary;
-                    }
                 }
                 catch (ApiException e)
                 {
@@ -190,7 +188,7 @@ namespace AllRequests
                     var getContact = await client.GetContactAsync(currentContact.Id);
                     Console.WriteLine(getContact.ToJSON());
 
-                    if (mutable && subAccount != null)
+                    if (subAccount != null)
                     {
                         Console.WriteLine(Environment.NewLine + "Create Contact:");
                         var createContact = await client.CreateContactAsync(new Contact
@@ -239,14 +237,11 @@ namespace AllRequests
                     var retrieveConversion = await client.GetConversionAsync(findConversions.Conversions[0].Id);
                     Console.WriteLine(retrieveConversion.ToJSON());
 
-                    if (mutable)
-                    {
-                        Console.WriteLine(Environment.NewLine + "Create Conversion:");
-                        var createConversion = await client.CreateConversionAsync(new Conversion("EUR", "GBP", "buy", (decimal) new Random().Next(100000, 1000000) / 100, true));
-                        Console.WriteLine(createConversion.ToJSON());
+                    Console.WriteLine(Environment.NewLine + "Create Conversion:");
+                    var createConversion = await client.CreateConversionAsync(new Conversion("EUR", "GBP", "buy", (decimal) new Random().Next(100000, 1000000) / 100, true));
+                    Console.WriteLine(createConversion.ToJSON());
 
-                        conversion = retrieveConversion;
-                    }
+                    conversion = createConversion;
                 }
                 catch (ApiException e)
                 {
@@ -297,7 +292,7 @@ namespace AllRequests
                     var retrievePaymentSubmission = await client.GetPaymentSubmissionAsync(retrievePayment.Id);
                     Console.WriteLine(retrievePaymentSubmission.ToJSON());
 
-                    if (mutable && beneficiary != null && conversion != null)
+                    if (beneficiary != null && conversion != null)
                     {
                         Console.WriteLine(Environment.NewLine + "Create Payments:");
                         var createPayment = await client.CreatePaymentAsync(new Payment
@@ -313,21 +308,15 @@ namespace AllRequests
                         });
                         Console.WriteLine(createPayment.ToJSON());
 
+                        payment = createPayment;
+
                         Console.WriteLine(Environment.NewLine + "Update Payment:");
                         var updatePayment = await client.UpdatePaymentAsync(new Payment
                         {
-                            Id = createPayment.Id,
+                            Id = payment.Id,
                             Reference = "CCY-PMT-" + new Random().Next(100, 1000)
                         });
                         Console.WriteLine(updatePayment.ToJSON());
-
-                        Console.WriteLine(Environment.NewLine + "Delete Payment:");
-                        var deletePayment = await client.DeletePaymentAsync(createPayment.Id);
-                        Console.WriteLine(deletePayment.ToJSON());
-
-                        Console.WriteLine(Environment.NewLine + "Delete Beneficiary:");
-                        var deleteBeneficiary = await client.DeleteBeneficiaryAsync(beneficiary.Id);
-                        Console.WriteLine(deleteBeneficiary.ToJSON());
                     }
                 }
                 catch (ApiException e)
@@ -412,6 +401,8 @@ namespace AllRequests
                     var createSettlement = await client.CreateSettlementAsync();
                     Console.WriteLine(createSettlement.ToJSON());
 
+                    settlement = createSettlement;
+
                     Console.WriteLine(Environment.NewLine + "Retrive Settlement:");
                     var retrieveSettlement = await client.GetSettlementAsync(createSettlement.Id);
                     Console.WriteLine(retrieveSettlement.ToJSON());
@@ -431,10 +422,6 @@ namespace AllRequests
                     Console.WriteLine(Environment.NewLine + "Remove Conversion from Settlement:");
                     var removeConversionSettlement = await client.RemoveConversionFromSettlementAsync(createSettlement.Id, conversion.Id);
                     Console.WriteLine(removeConversionSettlement.ToJSON());
-
-                    Console.WriteLine(Environment.NewLine + "Delete Settlement:");
-                    var deleteSettlement = await client.DeleteSettlementAsync(createSettlement.Id);
-                    Console.WriteLine(deleteSettlement.ToJSON());
                 }
                 catch (ApiException e)
                 {
@@ -480,7 +467,7 @@ namespace AllRequests
                     var retrieveTransfer = await client.GetTransferAsync(findTransfers.Transfers[0].Id);
                     Console.WriteLine(retrieveTransfer.ToJSON());
 
-                    if (mutable && mainAccount != null && subAccount != null)
+                    if (mainAccount != null && subAccount != null)
                     {
                         Console.WriteLine(Environment.NewLine + "Create Transfer:");
                         var createTransfer = await client.CreateTransferAsync(new Transfer
@@ -520,6 +507,25 @@ namespace AllRequests
                 catch (ApiException e)
                 {
                     Console.WriteLine("ApiException -> " + e.Message);
+                }
+
+                #endregion
+
+                #region Delete Objects
+
+                if (reverse)
+                {
+                    Console.WriteLine(Environment.NewLine + "Delete Settlement:");
+                    var deleteSettlement = await client.DeleteSettlementAsync(settlement.Id);
+                    Console.WriteLine(deleteSettlement.ToJSON());
+
+                    Console.WriteLine(Environment.NewLine + "Delete Payment:");
+                    var deletePayment = await client.DeletePaymentAsync(payment.Id);
+                    Console.WriteLine(deletePayment.ToJSON());
+
+                    Console.WriteLine(Environment.NewLine + "Delete Beneficiary:");
+                    var deleteBeneficiary = await client.DeleteBeneficiaryAsync(beneficiary.Id);
+                    Console.WriteLine(deleteBeneficiary.ToJSON());
                 }
 
                 #endregion
