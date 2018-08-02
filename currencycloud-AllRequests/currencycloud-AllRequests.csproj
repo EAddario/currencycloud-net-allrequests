@@ -33,9 +33,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CurrencyCloud, Version=2.1.5.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\CurrencyCloud.2.1.5\lib\net45\CurrencyCloud.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="CurrencyCloud, Version=2.4.3.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\..\net-master\Source\CurrencyCloud\bin\Debug\CurrencyCloud.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
       <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -49,6 +48,7 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QuickTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

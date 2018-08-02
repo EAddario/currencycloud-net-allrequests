@@ -11,7 +11,8 @@ namespace AllRequests
     {
         static void Main(string[] args)
         {
-            MainAsync(args[0], args[1]).Wait();
+            //MainAsync(args[0], args[1]).Wait();
+            QuickTest.MainAsync(args[0], args[1]).Wait();
         }
 
         static async Task MainAsync(string loginId, string apiKey)
