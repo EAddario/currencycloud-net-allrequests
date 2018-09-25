@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using CurrencyCloud;
 using CurrencyCloud.Entity;
@@ -27,7 +28,7 @@ namespace AllRequests
                 Console.WriteLine("Token: {0}", token);
                 isAuthenticated = true;
 
-                var reverse = false;
+                var reverse = true;
                 Account mainAccount = null;
                 Account subAccount = null;
                 Beneficiary beneficiary = null;
@@ -97,9 +98,6 @@ namespace AllRequests
                     Console.WriteLine(Environment.NewLine + "Find Balances:");
                     var findBalances = await client.FindBalancesAsync();
                     Console.WriteLine(findBalances.ToJSON());
-                    Console.WriteLine(Environment.NewLine + "Find Balances Loop:");
-                    foreach (var balance in findBalances.Balances)
-                        Console.WriteLine(balance.ToJSON());
 
                     if (findBalances.Balances[0] != null)
                     {
@@ -122,9 +120,6 @@ namespace AllRequests
                     Console.WriteLine(Environment.NewLine + "Find Beneficiaries:");
                     var findBeneficiaries = await client.FindBeneficiariesAsync();
                     Console.WriteLine(findBeneficiaries.ToJSON());
-                    Console.WriteLine(Environment.NewLine + "Find Beneficiaries Loop:");
-                    foreach (var element in findBeneficiaries.Beneficiaries)
-                        Console.WriteLine(element.ToJSON());
 
                     Console.WriteLine(Environment.NewLine + "Retrieve Beneficiary:");
                     var retrieveBeneficiary = await client.GetBeneficiaryAsync(findBeneficiaries.Beneficiaries[0].Id);
@@ -136,14 +131,23 @@ namespace AllRequests
                         Currency = "EUR",
                         AccountNumber = "1234567890",
                         Iban = "IT1200012030200359100100",
-                        BicSwift = "IBSPITNA020"
+                        BicSwift = "IBSPITNA020",
+                        PaymentTypes = new [] {"regular", "priority"},
+                        BeneficiaryEntityType = "individual",
+                        BeneficiaryAddress = new List<string> {"Via dei Tribunali, 38, 80138"},
+                        BeneficiaryCity = "Napoli",
+                        BeneficiaryCountry = "IT",
+                        BeneficiaryFirstName = "Dame Tamara",
+                        BeneficiaryLastName = "Carlton"
                     };
+
                     Console.WriteLine(Environment.NewLine + "Validate Beneficiary:");
                     var validateBeneficiary = await client.ValidateBeneficiaryAsync(beneficiary);
                     Console.WriteLine(validateBeneficiary.ToJSON());
 
                     beneficiary.BankAccountHolderName = "Dame Tamara Carlton";
                     beneficiary.Name = "Fulcrum Fund";
+
                     Console.WriteLine(Environment.NewLine + "Create Beneficiary:");
                     var createBeneficiary = await client.CreateBeneficiaryAsync(beneficiary);
                     Console.WriteLine(createBeneficiary.ToJSON());
@@ -156,12 +160,11 @@ namespace AllRequests
                         BeneficiaryFirstName = "Tamara",
                         BeneficiaryLastName = "Carlton",
                         Email = "development@currencycloud.com",
-                        //PaymentTypes = new [] {"regular", "priority"}
                     };
+
                     Console.WriteLine(Environment.NewLine + "Update Beneficiary:");
                     var updateBeneficiary = await client.UpdateBeneficiaryAsync(beneficiary);
                     Console.WriteLine(updateBeneficiary.ToJSON());
-
                 }
                 catch (ApiException e)
                 {
@@ -177,9 +180,6 @@ namespace AllRequests
                     Console.WriteLine(Environment.NewLine + "Find Contacts:");
                     var findContacts = await client.FindContactsAsync();
                     Console.WriteLine(findContacts.ToJSON());
-                    Console.WriteLine(Environment.NewLine + "Find Contacts Loop:");
-                    foreach (var element in findContacts.Contacts)
-                        Console.WriteLine(element.ToJSON());
 
                     Console.WriteLine(Environment.NewLine + "Current Contact:");
                     var currentContact = await client.GetCurrentContactAsync();
@@ -227,22 +227,132 @@ namespace AllRequests
 
                 try
                 {
-                    Console.WriteLine(Environment.NewLine + "Find Conversions:");
                     var findConversions = await client.FindConversionsAsync();
-                    Console.WriteLine(findConversions.ToJSON());
-                    Console.WriteLine(Environment.NewLine + "Find Conversions Loop:");
-                    foreach (var element in findConversions.Conversions)
-                        Console.WriteLine(element.ToJSON());
+                    Console.WriteLine(Environment.NewLine + "Find Conversions: {0}", findConversions.ToJSON());
 
-                    Console.WriteLine(Environment.NewLine + "Retrieve Conversion:");
                     var retrieveConversion = await client.GetConversionAsync(findConversions.Conversions[0].Id);
-                    Console.WriteLine(retrieveConversion.ToJSON());
+                    Console.WriteLine(Environment.NewLine + "Retrieve Conversion: {0}", retrieveConversion.ToJSON());
 
-                    Console.WriteLine(Environment.NewLine + "Create Conversion:");
-                    var createConversion = await client.CreateConversionAsync(new Conversion("EUR", "GBP", "buy", (decimal) new Random().Next(100000, 1000000) / 100, true));
-                    Console.WriteLine(createConversion.ToJSON());
+                    var createConversion = await client.CreateConversionAsync(new Conversion
+                    (
+                        "EUR",
+                        "GBP",
+                        "buy",
+                        (decimal) new Random().Next(1000000, 1500000) / 100,
+                        true
+                    ));
+                    Console.WriteLine(Environment.NewLine + "Create Conversion: {0}", createConversion.ToJSON());
 
-                    conversion = createConversion;
+                    var daysToMonday = (int) DayOfWeek.Monday <= (int) DateTime.Now.DayOfWeek
+                        ? (int) DayOfWeek.Monday - (int) DateTime.Now.DayOfWeek + 7
+                        : (int) DayOfWeek.Monday - (int) DateTime.Now.DayOfWeek;
+
+                    var quoteDateChange = await client.QuoteDateChangeConversionAsync(new ConversionDateChange
+                    {
+                        ConversionId = createConversion.Id,
+                        NewSettlementDate = DateTime.Now.AddDays(daysToMonday + 2)
+                    });
+                    Console.WriteLine(Environment.NewLine + "Quote Conversion Date Change: {0}", quoteDateChange.ToJSON());
+
+                    var dateChange = await client.DateChangeConversionAsync(new ConversionDateChange
+                    {
+                        ConversionId = createConversion.Id,
+                        NewSettlementDate = DateTime.Now.AddDays(daysToMonday + 2)
+                    });
+                    Console.WriteLine(Environment.NewLine + "First Conversion Date Change: {0}", dateChange.ToJSON());
+
+                    dateChange = await client.DateChangeConversionAsync(new ConversionDateChange
+                    {
+                        ConversionId = createConversion.Id,
+                        NewSettlementDate = DateTime.Now.AddDays(daysToMonday + 3)
+                    });
+                    Console.WriteLine(Environment.NewLine + "Second Conversion Date Change: {0}", dateChange.ToJSON());
+
+                    dateChange = await client.DateChangeConversionAsync(new ConversionDateChange
+                    {
+                        ConversionId = createConversion.Id,
+                        NewSettlementDate = DateTime.Now.AddDays(daysToMonday + 4)
+                    });
+                    Console.WriteLine(Environment.NewLine + "Third Conversion Date Change: {0}", dateChange.ToJSON());
+
+                    /* ToDo: Deprecate? */
+//                    var dateChangeDetail = await client.DateChangeDetailsConversionAsync(createConversion);
+//                    Console.WriteLine(Environment.NewLine + "Date Change Details: {0}", dateChangeDetail.ToJSON());
+
+                    var splitPreview = await client.PreviewSplitConversionAsync(new Conversion
+                    {
+                        Id = createConversion.Id,
+                        Amount = new Random().Next(500000, 999999) / 100
+                    });
+                    Console.WriteLine(Environment.NewLine + "Preview Conversion Split: {0}", splitPreview.ToJSON());
+
+                    var splitConversion = await client.SplitConversionAsync(new Conversion
+                    {
+                        Id = createConversion.Id,
+                        Amount = new Random().Next(750000, 999999) / 100
+                    });
+                    Console.WriteLine(Environment.NewLine + "Conversion Split: {0}", splitConversion.ToJSON());
+
+                    var parentConversion = splitConversion.ParentConversion;
+                    var childConversion = splitConversion.ChildConversion;
+
+                    var splitChildConversion = await client.SplitConversionAsync(new Conversion
+                    {
+                        Id = childConversion.Id,
+                        Amount = new Random().Next(500000, 749999) / 100
+                    });
+                    Console.WriteLine(Environment.NewLine + "Child Conversion Split: {0}", splitChildConversion.ToJSON());
+
+                    var splitHistory = await client.SplitHistoryConversionAsync(new Conversion
+                    {
+                        Id = parentConversion.Id
+                    });
+                    Console.WriteLine(Environment.NewLine + "Original Conversion Split History: {0}", splitHistory.ToJSON());
+
+                    splitHistory = await client.SplitHistoryConversionAsync(new Conversion
+                    {
+                        Id = childConversion.Id
+                    });
+                    Console.WriteLine(Environment.NewLine + "Parent Conversion Split History: {0}", splitHistory.ToJSON());
+
+                    splitHistory = await client.SplitHistoryConversionAsync(new Conversion
+                    {
+                        Id = splitChildConversion.ChildConversion.Id
+                    });
+                    Console.WriteLine(Environment.NewLine + "Child/Child Conversion Split History: {0}", splitHistory.ToJSON());
+
+                    var profitAndLoss = await client.FindConversionProfitAndLossesAsync();
+                    Console.WriteLine(Environment.NewLine + "Total Profit and Losses: {0}", profitAndLoss.ToJSON());
+
+                    profitAndLoss = await client.FindConversionProfitAndLossesAsync(new ConversionProfitAndLossFindParameters
+                    {
+                        ConversionId = parentConversion.Id
+                    });
+                    Console.WriteLine(Environment.NewLine + "Conversion Profit and Losses: {0}", profitAndLoss.ToJSON());
+
+                    var quoteCancel = await client.QuoteCancelConversionAsync(new ConversionCancellation
+                    {
+                        ConversionId = createConversion.Id
+                    });
+                    Console.WriteLine(Environment.NewLine + "Quote Conversion Cancellation: {0}", quoteCancel.ToJSON());
+
+                    var cancelConversion = await client.CancelConversionsAsync(new ConversionCancellation
+                    {
+                        ConversionId = splitChildConversion.ChildConversion.Id
+                    });
+                    Console.WriteLine(Environment.NewLine + "Cancel Split Child Conversion: {0}", cancelConversion.ToJSON());
+
+                    cancelConversion = await client.CancelConversionsAsync(new ConversionCancellation
+                    {
+                        ConversionId = splitChildConversion.ParentConversion.Id
+                    });
+                    Console.WriteLine(Environment.NewLine + "Cancel Split Parent Conversion: {0}", cancelConversion.ToJSON());
+
+                    cancelConversion = await client.CancelConversionsAsync(new ConversionCancellation
+                    {
+                        ConversionId = parentConversion.Id
+                    });
+                    Console.WriteLine(Environment.NewLine + "Cancel Parent Conversion: {0}", cancelConversion.ToJSON());
                 }
                 catch (ApiException e)
                 {
@@ -255,14 +365,17 @@ namespace AllRequests
 
                 try
                 {
+                    /* ToDo: Deprecate? */
                     Console.WriteLine(Environment.NewLine + "Find Ibans:");
                     var findIbans = await client.FindIbansAsync();
                     Console.WriteLine(findIbans.ToJSON());
 
+                    /* ToDo: Deprecate? */
                     Console.WriteLine(Environment.NewLine + "Find Sub-Account Ibans:");
                     var findSubAccountIbans = await client.FindSubAccountsIbansAsync(new IbanFindParameters());
                     Console.WriteLine(findSubAccountIbans.ToJSON());
 
+                    /* ToDo: Deprecate? */
                     Console.WriteLine(Environment.NewLine + "Retrieve Sub-Account Ibans:");
                     var retrieveSubAccountIbans = await client.GetSubAccountsIbansAsync(subAccount.Id);
                     Console.WriteLine(retrieveSubAccountIbans.ToJSON());
@@ -281,9 +394,6 @@ namespace AllRequests
                     Console.WriteLine(Environment.NewLine + "Find Payments:");
                     var findPayments = await client.FindPaymentsAsync();
                     Console.WriteLine(findPayments.ToJSON());
-                    Console.WriteLine(Environment.NewLine + "Find Payments Loop:");
-                    foreach (var element in findPayments.Payments)
-                        Console.WriteLine(element.ToJSON());
 
                     Console.WriteLine(Environment.NewLine + "Retrieve Payment:");
                     var retrievePayment = await client.GetPaymentAsync(findPayments.Payments[0].Id);
@@ -296,7 +406,7 @@ namespace AllRequests
                     if (beneficiary != null && conversion != null)
                     {
                         Console.WriteLine(Environment.NewLine + "Create Payments:");
-                        var createPayment = await client.CreatePaymentAsync(new Payment
+                        payment = await client.CreatePaymentAsync(new Payment
                         {
                             BeneficiaryId = beneficiary.Id,
                             Currency = conversion.BuyCurrency,
@@ -305,11 +415,10 @@ namespace AllRequests
                             Reason = "Investment",
                             Reference = "CCY-PMT-" + new Random().Next(100, 1000),
                             PaymentType = "regular",
-                            UltimateBeneficiaryName = beneficiary.BankAccountHolderName
+                            UltimateBeneficiaryName = beneficiary.BankAccountHolderName,
+                            UniqueRequestId = Guid.NewGuid().ToString()
                         });
-                        Console.WriteLine(createPayment.ToJSON());
-
-                        payment = createPayment;
+                        Console.WriteLine(payment.ToJSON());
 
                         Console.WriteLine(Environment.NewLine + "Update Payment:");
                         var updatePayment = await client.UpdatePaymentAsync(new Payment
@@ -338,7 +447,7 @@ namespace AllRequests
                     Console.WriteLine(Environment.NewLine + "Detailed Rates:");
                     var detailedRates = await client.GetRateAsync(new DetailedRates
                     {
-                        BuyCurrency = "JPY",
+                        BuyCurrency = "USD",
                         SellCurrency = "GBP",
                         FixedSide = "buy",
                         Amount = (decimal) new Random().Next(100000, 1000000) / 100
@@ -376,6 +485,10 @@ namespace AllRequests
                     var settlementAccounts = await client.GetSettlementAccountsAsync();
                     Console.WriteLine(settlementAccounts.ToJSON());
 
+                    Console.WriteLine(Environment.NewLine + "Purpose Codes:");
+                    var purposeCodes = await client.GetPaymentPurposeCodes("INR", "IN");
+                    Console.WriteLine(purposeCodes.ToJSON());
+
                     Console.WriteLine(Environment.NewLine + "Payer Required Details:");
                     var payerDetails = await client.GetPayerRequiredDetailsAsync("GB");
                     Console.WriteLine(payerDetails.ToJSON());
@@ -394,34 +507,29 @@ namespace AllRequests
                     Console.WriteLine(Environment.NewLine + "Find Settlements:");
                     var findSettlements = await client.FindSettlementsAsync();
                     Console.WriteLine(findSettlements.ToJSON());
-                    Console.WriteLine(Environment.NewLine + "Find Settlements Loop:");
-                    foreach (var element in findSettlements.Settlements)
-                        Console.WriteLine(element.ToJSON());
 
                     Console.WriteLine(Environment.NewLine + "Create Settlement:");
-                    var createSettlement = await client.CreateSettlementAsync();
-                    Console.WriteLine(createSettlement.ToJSON());
-
-                    settlement = createSettlement;
+                    settlement = await client.CreateSettlementAsync();
+                    Console.WriteLine(settlement.ToJSON());
 
                     Console.WriteLine(Environment.NewLine + "Retrive Settlement:");
-                    var retrieveSettlement = await client.GetSettlementAsync(createSettlement.Id);
+                    var retrieveSettlement = await client.GetSettlementAsync(settlement.Id);
                     Console.WriteLine(retrieveSettlement.ToJSON());
 
                     Console.WriteLine(Environment.NewLine + "Add Conversion to Settlement:");
-                    var addConversionSettlement = await client.AddConversionToSettlementAsync(createSettlement.Id, conversion.Id);
+                    var addConversionSettlement = await client.AddConversionToSettlementAsync(settlement.Id, conversion.Id);
                     Console.WriteLine(addConversionSettlement.ToJSON());
 
                     Console.WriteLine(Environment.NewLine + "Release Settlement:");
-                    var releaseSettlement = await client.ReleaseSettlementAsync(createSettlement.Id);
+                    var releaseSettlement = await client.ReleaseSettlementAsync(settlement.Id);
                     Console.WriteLine(releaseSettlement.ToJSON());
 
                     Console.WriteLine(Environment.NewLine + "Unrelease Settlement:");
-                    var unreleaseSettlement = await client.UnreleaseSettlementAsync(createSettlement.Id);
+                    var unreleaseSettlement = await client.UnreleaseSettlementAsync(settlement.Id);
                     Console.WriteLine(unreleaseSettlement.ToJSON());
 
                     Console.WriteLine(Environment.NewLine + "Remove Conversion from Settlement:");
-                    var removeConversionSettlement = await client.RemoveConversionFromSettlementAsync(createSettlement.Id, conversion.Id);
+                    var removeConversionSettlement = await client.RemoveConversionFromSettlementAsync(settlement.Id, conversion.Id);
                     Console.WriteLine(removeConversionSettlement.ToJSON());
                 }
                 catch (ApiException e)
@@ -438,9 +546,6 @@ namespace AllRequests
                     Console.WriteLine(Environment.NewLine + "Find Transactions:");
                     var findTransactions = await client.FindTransactionsAsync();
                     Console.WriteLine(findTransactions.ToJSON());
-                    Console.WriteLine(Environment.NewLine + "Find Transactions Loop:");
-                    foreach (var element in findTransactions.Transactions)
-                        Console.WriteLine(element.ToJSON());
 
                     Console.WriteLine(Environment.NewLine + "Retrieve Transaction:");
                     var retrieveTransaction = await client.GetTransactionAsync(findTransactions.Transactions[0].Id);
@@ -460,13 +565,13 @@ namespace AllRequests
                     Console.WriteLine(Environment.NewLine + "Find Transfers:");
                     var findTransfers = await client.FindTransfersAsync();
                     Console.WriteLine(findTransfers.ToJSON());
-                    Console.WriteLine(Environment.NewLine + "Find Transfers Loop:");
-                    foreach (var element in findTransfers.Transfers)
-                        Console.WriteLine(element.ToJSON());
 
-                    Console.WriteLine(Environment.NewLine + "Retrieve Transfer:");
-                    var retrieveTransfer = await client.GetTransferAsync(findTransfers.Transfers[0].Id);
-                    Console.WriteLine(retrieveTransfer.ToJSON());
+                    if (findTransfers != null)
+                    {
+                        Console.WriteLine(Environment.NewLine + "Retrieve Transfer:");
+                        var retrieveTransfer = await client.GetTransferAsync(findTransfers.Transfers[0].Id);
+                        Console.WriteLine(retrieveTransfer.ToJSON());
+                    }
 
                     if (mainAccount != null && subAccount != null)
                     {
@@ -493,17 +598,23 @@ namespace AllRequests
 
                 try
                 {
-                    Console.WriteLine(Environment.NewLine + "Find Virtual Accounts:");
-                    var findVANs = await client.FindVirtualAccountsAsync(new FindParameters());
-                    Console.WriteLine(findVANs.ToJSON());
+                    /* ToDo: Deprecate? */
+//                    Console.WriteLine(Environment.NewLine + "Find Virtual Accounts:");
+//                    var findVANs = await client.FindVirtualAccountsAsync(new FindParameters());
+//                    Console.WriteLine(findVANs.ToJSON());
 
-                    Console.WriteLine(Environment.NewLine + "Find Sub-Account Virtual Accounts:");
-                    var findSubAccountVANs = await client.FindSubAccountsVirtualAccountsAsync(new FindParameters());
-                    Console.WriteLine(findSubAccountVANs.ToJSON());
+                    /* ToDo: Deprecate? */
+//                    Console.WriteLine(Environment.NewLine + "Find Sub-Account Virtual Accounts:");
+//                    var findSubAccountVANs = await client.FindSubAccountsVirtualAccountsAsync(new FindParameters());
+//                    Console.WriteLine(findSubAccountVANs.ToJSON());
 
-                    Console.WriteLine(Environment.NewLine + "Retrieve Sub-Account Virtual Accounts:");
-                    var retrieveSubAccountVANs = await client.GetSubAccountVirtualAccountsAsync(findSubAccountVANs.VirtualAccounts[0].Id);
-                    Console.WriteLine(retrieveSubAccountVANs.ToJSON());
+//                    if (findSubAccountVANs != null)
+//                    {
+//                        /* ToDo: Deprecate? */
+//                        Console.WriteLine(Environment.NewLine + "Retrieve Sub-Account Virtual Accounts:");
+//                        var retrieveSubAccountVANs = await client.GetSubAccountVirtualAccountsAsync(findSubAccountVANs.VirtualAccounts[0].Id);
+//                        Console.WriteLine(retrieveSubAccountVANs.ToJSON());
+//                    }
                 }
                 catch (ApiException e)
                 {
@@ -516,24 +627,33 @@ namespace AllRequests
 
                 if (reverse)
                 {
-                    Console.WriteLine(Environment.NewLine + "Delete Settlement:");
-                    var deleteSettlement = await client.DeleteSettlementAsync(settlement.Id);
-                    Console.WriteLine(deleteSettlement.ToJSON());
+                    if (settlement != null)
+                    {
+                        Console.WriteLine(Environment.NewLine + "Delete Settlement:");
+                        var deleteSettlement = await client.DeleteSettlementAsync(settlement.Id);
+                        Console.WriteLine(deleteSettlement.ToJSON());
+                    }
 
-                    Console.WriteLine(Environment.NewLine + "Delete Payment:");
-                    var deletePayment = await client.DeletePaymentAsync(payment.Id);
-                    Console.WriteLine(deletePayment.ToJSON());
+                    if (payment != null)
+                    {
+                        Console.WriteLine(Environment.NewLine + "Delete Payment:");
+                        var deletePayment = await client.DeletePaymentAsync(payment.Id);
+                        Console.WriteLine(deletePayment.ToJSON());
+                    }
 
-                    Console.WriteLine(Environment.NewLine + "Delete Beneficiary:");
-                    var deleteBeneficiary = await client.DeleteBeneficiaryAsync(beneficiary.Id);
-                    Console.WriteLine(deleteBeneficiary.ToJSON());
+                    if (beneficiary != null)
+                    {
+                        Console.WriteLine(Environment.NewLine + "Delete Beneficiary:");
+                        var deleteBeneficiary = await client.DeleteBeneficiaryAsync(beneficiary.Id);
+                        Console.WriteLine(deleteBeneficiary.ToJSON());
+                    }
                 }
 
                 #endregion
             }
             catch (ApiException e)
             {
-                if(e is AuthenticationException)
+                if (e is AuthenticationException)
                 {
                     isAuthenticated = false;
                 }
@@ -544,9 +664,9 @@ namespace AllRequests
             {
                 Console.WriteLine("System Exception");
                 Console.WriteLine("Message: {0}", e.Message);
-                Console.WriteLine("Source: {0}",e.Source);
-                Console.WriteLine("Method: {0}",e.TargetSite);
-                Console.WriteLine("Stack Trace: {0}",e.StackTrace);
+                Console.WriteLine("Source: {0}", e.Source);
+                Console.WriteLine("Method: {0}", e.TargetSite);
+                Console.WriteLine("Stack Trace: {0}", e.StackTrace);
             }
             finally
             {
