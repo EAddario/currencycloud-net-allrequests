@@ -31,36 +31,37 @@ namespace AllRequests
                 Payment payment = null;
                 Settlement settlement = null;
 
-                beneficiary = new Beneficiary
-                {
-                    BankCountry = "IT",
-                    Currency = "EUR",
-                    AccountNumber = "1234567890",
-                    Iban = "IT1200012030200359100100",
-                    BicSwift = "IBSPITNA020",
-                    PaymentTypes = new [] {"regular", "priority"},
-                    BeneficiaryEntityType = "individual",
-                    BeneficiaryAddress = new List<string> {"Via dei Tribunali, 38, 80138"},
-                    BeneficiaryCity = "Napoli",
-                    BeneficiaryCountry = "IT",
-                    BeneficiaryFirstName = "Dame Tamara",
-                    BeneficiaryLastName = "Carlton"
-                };
+                Console.WriteLine(Environment.NewLine + "Beneficiary Required Details:");
+                var beneficiaryDetails = await client.GetBeneficiaryRequiredDetailsAsync("MXN", "MX");
+                Console.WriteLine(beneficiaryDetails.ToJSON());
 
-                Console.WriteLine(Environment.NewLine + "Validate Beneficiary:");
-                var validateBeneficiary = await client.ValidateBeneficiaryAsync(beneficiary);
-                Console.WriteLine(validateBeneficiary.ToJSON());
+                Console.WriteLine(Environment.NewLine + "Payer Required Details:");
+                var payerDetails = await client.GetPayerRequiredDetailsAsync("MX");
+                Console.WriteLine(payerDetails.ToJSON());
 
-                beneficiary.BankAccountHolderName = "Dame Tamara Carlton";
-                beneficiary.Name = "Fulcrum Fund";
-
-                Console.WriteLine(Environment.NewLine + "Create Beneficiary:");
-                var createBeneficiary = await client.CreateBeneficiaryAsync(beneficiary);
-                Console.WriteLine(createBeneficiary.ToJSON());
-
-                Console.WriteLine(Environment.NewLine + "Delete Beneficiary:");
-                var deleteBeneficiary = await client.DeleteBeneficiaryAsync(createBeneficiary.Id);
-                Console.WriteLine(deleteBeneficiary.ToJSON());
+//                Console.WriteLine(Environment.NewLine + "Conversion Dates:");
+//                var conversionDates = await client.GetConversionDatesAsync("GBPJPY");
+//                Console.WriteLine(conversionDates.ToJSON());
+//
+//                Console.WriteLine(Environment.NewLine + "Available Currencies:");
+//                var availableCurrencies = await client.GetAvailableCurrenciesAsync();
+//                Console.WriteLine(availableCurrencies.ToJSON());
+//
+//                Console.WriteLine(Environment.NewLine + "Payment Dates:");
+//                var paymentDates = await client.GetPaymentDatesAsync("JPY");
+//                Console.WriteLine(paymentDates.ToJSON());
+//
+//                Console.WriteLine(Environment.NewLine + "Settlement Accounts:");
+//                var settlementAccounts = await client.GetSettlementAccountsAsync();
+//                Console.WriteLine(settlementAccounts.ToJSON());
+//
+//                Console.WriteLine(Environment.NewLine + "Purpose Codes:");
+//                var purposeCodes = await client.GetPaymentPurposeCodes("INR", "IN");
+//                Console.WriteLine(purposeCodes.ToJSON());
+//
+//                Console.WriteLine(Environment.NewLine + "Payer Required Details:");
+//                var payerDetails = await client.GetPayerRequiredDetailsAsync("GB");
+//                Console.WriteLine(payerDetails.ToJSON());
             }
             catch (ApiException e)
             {
