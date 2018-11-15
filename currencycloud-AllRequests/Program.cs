@@ -28,7 +28,6 @@ namespace AllRequests
                 Console.WriteLine("Token: {0}", token);
                 isAuthenticated = true;
 
-                var reverse = true;
                 Account mainAccount = null;
                 Account subAccount = null;
                 Beneficiary beneficiary = null;
@@ -427,6 +426,21 @@ namespace AllRequests
                             Reference = "CCY-PMT-" + new Random().Next(100, 1000)
                         });
                         Console.WriteLine(updatePayment.ToJSON());
+
+                        Console.WriteLine(Environment.NewLine + "Get a Payment Confirmation:");
+                        var retrievePaymentConfirmation = await client.GetPaymentConfirmationAsync(retrievePayment.Id);
+                        Console.WriteLine(retrievePaymentConfirmation.ToJSON());
+
+                        Console.WriteLine(Environment.NewLine + "Authorise Payment:");
+                        var authorisePayment = await client.PaymentAuthorisationAsync(new []
+                        {
+                            findPayments.Payments[0].Id,
+                            findPayments.Payments[1].Id,
+                            findPayments.Payments[2].Id
+                        } );
+                        Console.WriteLine(authorisePayment[0].ToJSON());
+                        Console.WriteLine(authorisePayment[1].ToJSON());
+                        Console.WriteLine(authorisePayment[2].ToJSON());
                     }
                 }
                 catch (ApiException e)
@@ -492,6 +506,45 @@ namespace AllRequests
                     Console.WriteLine(Environment.NewLine + "Payer Required Details:");
                     var payerDetails = await client.GetPayerRequiredDetailsAsync("GB");
                     Console.WriteLine(payerDetails.ToJSON());
+                }
+                catch (ApiException e)
+                {
+                    Console.WriteLine("ApiException -> " + e.Message);
+                }
+
+                #endregion
+
+                #region Reports API
+
+                try
+                {
+                    Console.WriteLine(Environment.NewLine + "Create Conversion Report:");
+                    var createConversionReport = await client.CreateConversionReportAsync(new ReportParameters
+                    {
+                        UniqueRequestId = Guid.NewGuid().ToString(),
+                        Description = "Conversion Report " + RandomChars(5)
+                    });
+                    Console.WriteLine(createConversionReport.ToJSON());
+
+                    Console.WriteLine(Environment.NewLine + "Get Conversion Report:");
+                    var getConversionReport = await client.GetReportRequestAsync(createConversionReport.Id);
+                    Console.WriteLine(getConversionReport.ToJSON());
+
+                    Console.WriteLine(Environment.NewLine + "Create Payment Report:");
+                    var createPaymentReport = await client.CreatePaymentReportAsync(new ReportParameters
+                    {
+                        UniqueRequestId = Guid.NewGuid().ToString(),
+                        Description = "Payment Report " + RandomChars(5)
+                    });
+                    Console.WriteLine(createPaymentReport.ToJSON());
+
+                    Console.WriteLine(Environment.NewLine + "Get Payment Report:");
+                    var getPaymentReport = await client.GetReportRequestAsync(createPaymentReport.Id);
+                    Console.WriteLine(getPaymentReport.ToJSON());
+
+                    Console.WriteLine(Environment.NewLine + "Find Reports:");
+                    var findReports = await client.FindReportRequestsAsync();
+                    Console.WriteLine(findReports.ToJSON());
                 }
                 catch (ApiException e)
                 {
@@ -598,23 +651,13 @@ namespace AllRequests
 
                 try
                 {
-                    /* ToDo: Deprecate? */
-//                    Console.WriteLine(Environment.NewLine + "Find Virtual Accounts:");
-//                    var findVANs = await client.FindVirtualAccountsAsync(new FindParameters());
-//                    Console.WriteLine(findVANs.ToJSON());
+                    Console.WriteLine(Environment.NewLine + "Find Virtual Accounts:");
+                    var findVANs = await client.FindVirtualAccountsAsync();
+                    Console.WriteLine(findVANs.ToJSON());
 
-                    /* ToDo: Deprecate? */
-//                    Console.WriteLine(Environment.NewLine + "Find Sub-Account Virtual Accounts:");
-//                    var findSubAccountVANs = await client.FindSubAccountsVirtualAccountsAsync(new FindParameters());
-//                    Console.WriteLine(findSubAccountVANs.ToJSON());
-
-//                    if (findSubAccountVANs != null)
-//                    {
-//                        /* ToDo: Deprecate? */
-//                        Console.WriteLine(Environment.NewLine + "Retrieve Sub-Account Virtual Accounts:");
-//                        var retrieveSubAccountVANs = await client.GetSubAccountVirtualAccountsAsync(findSubAccountVANs.VirtualAccounts[0].Id);
-//                        Console.WriteLine(retrieveSubAccountVANs.ToJSON());
-//                    }
+                    Console.WriteLine(Environment.NewLine + "Get Virtual Accounts:");
+                    var getVANs = await client.GetVirtualAccountsAsync(new FindParameters());
+                    Console.WriteLine(getVANs.ToJSON());
                 }
                 catch (ApiException e)
                 {
@@ -625,28 +668,25 @@ namespace AllRequests
 
                 #region Delete Objects
 
-                if (reverse)
+                if (settlement != null)
                 {
-                    if (settlement != null)
-                    {
-                        Console.WriteLine(Environment.NewLine + "Delete Settlement:");
-                        var deleteSettlement = await client.DeleteSettlementAsync(settlement.Id);
-                        Console.WriteLine(deleteSettlement.ToJSON());
-                    }
+                    Console.WriteLine(Environment.NewLine + "Delete Settlement:");
+                    var deleteSettlement = await client.DeleteSettlementAsync(settlement.Id);
+                    Console.WriteLine(deleteSettlement.ToJSON());
+                }
 
-                    if (payment != null)
-                    {
-                        Console.WriteLine(Environment.NewLine + "Delete Payment:");
-                        var deletePayment = await client.DeletePaymentAsync(payment.Id);
-                        Console.WriteLine(deletePayment.ToJSON());
-                    }
+                if (payment != null)
+                {
+                    Console.WriteLine(Environment.NewLine + "Delete Payment:");
+                    var deletePayment = await client.DeletePaymentAsync(payment.Id);
+                    Console.WriteLine(deletePayment.ToJSON());
+                }
 
-                    if (beneficiary != null)
-                    {
-                        Console.WriteLine(Environment.NewLine + "Delete Beneficiary:");
-                        var deleteBeneficiary = await client.DeleteBeneficiaryAsync(beneficiary.Id);
-                        Console.WriteLine(deleteBeneficiary.ToJSON());
-                    }
+                if (beneficiary != null)
+                {
+                    Console.WriteLine(Environment.NewLine + "Delete Beneficiary:");
+                    var deleteBeneficiary = await client.DeleteBeneficiaryAsync(beneficiary.Id);
+                    Console.WriteLine(deleteBeneficiary.ToJSON());
                 }
 
                 #endregion

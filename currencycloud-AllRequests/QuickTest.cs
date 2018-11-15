@@ -23,46 +23,6 @@ namespace AllRequests
                 Console.WriteLine("Token: {0}", token);
                 isAuthenticated = true;
 
-                var reverse = false;
-                Account mainAccount = null;
-                Account subAccount = null;
-                Beneficiary beneficiary = null;
-                Conversion conversion = null;
-                Payment payment = null;
-                Settlement settlement = null;
-
-                Console.WriteLine(Environment.NewLine + "Beneficiary Required Details:");
-                var beneficiaryDetails = await client.GetBeneficiaryRequiredDetailsAsync("MXN", "MX");
-                Console.WriteLine(beneficiaryDetails.ToJSON());
-
-                Console.WriteLine(Environment.NewLine + "Payer Required Details:");
-                var payerDetails = await client.GetPayerRequiredDetailsAsync("MX");
-                Console.WriteLine(payerDetails.ToJSON());
-
-//                Console.WriteLine(Environment.NewLine + "Conversion Dates:");
-//                var conversionDates = await client.GetConversionDatesAsync("GBPJPY");
-//                Console.WriteLine(conversionDates.ToJSON());
-//
-//                Console.WriteLine(Environment.NewLine + "Available Currencies:");
-//                var availableCurrencies = await client.GetAvailableCurrenciesAsync();
-//                Console.WriteLine(availableCurrencies.ToJSON());
-//
-//                Console.WriteLine(Environment.NewLine + "Payment Dates:");
-//                var paymentDates = await client.GetPaymentDatesAsync("JPY");
-//                Console.WriteLine(paymentDates.ToJSON());
-//
-//                Console.WriteLine(Environment.NewLine + "Settlement Accounts:");
-//                var settlementAccounts = await client.GetSettlementAccountsAsync();
-//                Console.WriteLine(settlementAccounts.ToJSON());
-//
-//                Console.WriteLine(Environment.NewLine + "Purpose Codes:");
-//                var purposeCodes = await client.GetPaymentPurposeCodes("INR", "IN");
-//                Console.WriteLine(purposeCodes.ToJSON());
-//
-//                Console.WriteLine(Environment.NewLine + "Payer Required Details:");
-//                var payerDetails = await client.GetPayerRequiredDetailsAsync("GB");
-//                Console.WriteLine(payerDetails.ToJSON());
-            }
             catch (ApiException e)
             {
                 if(e is AuthenticationException)
@@ -88,6 +48,20 @@ namespace AllRequests
                     await client.CloseAsync();
                 }
             }
+        }
+
+        static string RandomChars(int num)
+        {
+            var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            var stringChars = new char[num];
+            var random = new Random();
+
+            for (int i = 0; i < stringChars.Length; i++)
+            {
+                stringChars[i] = chars[random.Next(chars.Length)];
+            }
+
+            return new string(stringChars);
         }
     }
 }
