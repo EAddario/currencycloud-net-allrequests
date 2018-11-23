@@ -12,8 +12,9 @@ namespace AllRequests
     {
         static void Main(string[] args)
         {
-            //MainAsync(args[0], args[1]).Wait();
-            QuickTest.MainAsync(args[0], args[1]).Wait();
+            /* ToDo: Reverse commenting to run chosen subset of calls only */
+            MainAsync(args[0], args[1]).Wait();
+            //QuickTest.MainAsync(args[0], args[1]).Wait();
         }
 
         static async Task MainAsync(string loginId, string apiKey)
@@ -34,6 +35,7 @@ namespace AllRequests
                 Conversion conversion = null;
                 Payment payment = null;
                 Settlement settlement = null;
+                Transaction transaction = null;
 
                 #region Accounts API
 
@@ -364,20 +366,9 @@ namespace AllRequests
 
                 try
                 {
-                    /* ToDo: Deprecate? */
                     Console.WriteLine(Environment.NewLine + "Find Ibans:");
                     var findIbans = await client.FindIbansAsync();
                     Console.WriteLine(findIbans.ToJSON());
-
-                    /* ToDo: Deprecate? */
-                    Console.WriteLine(Environment.NewLine + "Find Sub-Account Ibans:");
-                    var findSubAccountIbans = await client.FindSubAccountsIbansAsync(new IbanFindParameters());
-                    Console.WriteLine(findSubAccountIbans.ToJSON());
-
-                    /* ToDo: Deprecate? */
-                    Console.WriteLine(Environment.NewLine + "Retrieve Sub-Account Ibans:");
-                    var retrieveSubAccountIbans = await client.GetSubAccountsIbansAsync(subAccount.Id);
-                    Console.WriteLine(retrieveSubAccountIbans.ToJSON());
                 }
                 catch (ApiException e)
                 {
@@ -426,22 +417,20 @@ namespace AllRequests
                             Reference = "CCY-PMT-" + new Random().Next(100, 1000)
                         });
                         Console.WriteLine(updatePayment.ToJSON());
-
-                        Console.WriteLine(Environment.NewLine + "Get a Payment Confirmation:");
-                        var retrievePaymentConfirmation = await client.GetPaymentConfirmationAsync(retrievePayment.Id);
-                        Console.WriteLine(retrievePaymentConfirmation.ToJSON());
-
-                        Console.WriteLine(Environment.NewLine + "Authorise Payment:");
-                        var authorisePayment = await client.PaymentAuthorisationAsync(new []
-                        {
-                            findPayments.Payments[0].Id,
-                            findPayments.Payments[1].Id,
-                            findPayments.Payments[2].Id
-                        } );
-                        Console.WriteLine(authorisePayment[0].ToJSON());
-                        Console.WriteLine(authorisePayment[1].ToJSON());
-                        Console.WriteLine(authorisePayment[2].ToJSON());
                     }
+
+                    Console.WriteLine(Environment.NewLine + "Get a Payment Confirmation:");
+                    var retrievePaymentConfirmation = await client.GetPaymentConfirmationAsync(retrievePayment.Id);
+                    Console.WriteLine(retrievePaymentConfirmation.ToJSON());
+
+                    Console.WriteLine(Environment.NewLine + "Authorise Payment:");
+                    var authorisePayment = await client.PaymentAuthorisationAsync(new []
+                    {
+                        findPayments.Payments[0].Id,
+                        findPayments.Payments[1].Id,
+                        findPayments.Payments[2].Id
+                    } );
+                    Console.WriteLine(authorisePayment.ToJSON());
                 }
                 catch (ApiException e)
                 {
@@ -601,12 +590,27 @@ namespace AllRequests
                     Console.WriteLine(findTransactions.ToJSON());
 
                     Console.WriteLine(Environment.NewLine + "Retrieve Transaction:");
-                    var retrieveTransaction = await client.GetTransactionAsync(findTransactions.Transactions[0].Id);
-                    Console.WriteLine(retrieveTransaction.ToJSON());
+                    transaction = await client.GetTransactionAsync(findTransactions.Transactions[0].Id);
+                    Console.WriteLine(transaction.ToJSON());
                 }
                 catch (ApiException e)
                 {
                     Console.WriteLine(e.Message);
+                }
+
+                #endregion
+
+                #region Sender API
+
+                try
+                {
+                    Console.WriteLine(Environment.NewLine + "Get Sender Details:");
+                    var retrieveSenderDetails = await client.GetSenderDetailsAsync(transaction.Id);
+                    Console.WriteLine(retrieveSenderDetails.ToJSON());
+                }
+                catch (ApiException e)
+                {
+                    Console.WriteLine("ApiException -> " + e.Message);
                 }
 
                 #endregion

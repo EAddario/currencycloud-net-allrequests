@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using CurrencyCloud;
 using CurrencyCloud.Entity;
@@ -23,9 +22,11 @@ namespace AllRequests
                 Console.WriteLine("Token: {0}", token);
                 isAuthenticated = true;
 
+                /* ToDo: Add API calls here */
+            }
             catch (ApiException e)
             {
-                if(e is AuthenticationException)
+                if (e is AuthenticationException)
                 {
                     isAuthenticated = false;
                 }
@@ -36,9 +37,9 @@ namespace AllRequests
             {
                 Console.WriteLine("System Exception");
                 Console.WriteLine("Message: {0}", e.Message);
-                Console.WriteLine("Source: {0}",e.Source);
-                Console.WriteLine("Method: {0}",e.TargetSite);
-                Console.WriteLine("Stack Trace: {0}",e.StackTrace);
+                Console.WriteLine("Source: {0}", e.Source);
+                Console.WriteLine("Method: {0}", e.TargetSite);
+                Console.WriteLine("Stack Trace: {0}", e.StackTrace);
             }
             finally
             {
