@@ -84,6 +84,20 @@ namespace AllRequests
                         IdentificationValue = RandomChars(10)
                     });
                     Console.WriteLine(updateAccount.ToJSON());
+
+                    Console.WriteLine(Environment.NewLine + "Get Payment Charges Settings:");
+                    var chargeSettings = await client.GetPaymentChargesSettingsAsync(updateAccount.Id);
+                    Console.WriteLine(chargeSettings.ToJSON());
+
+                    var manageChargeSettings = new PaymentChargesSettings(
+                        chargeSettings.PaymentChargesSettings[0].AccountId,
+                        chargeSettings.PaymentChargesSettings[0].ChargeSettingsId)
+                        {Default = false, Enabled = false};
+
+
+                    Console.WriteLine(Environment.NewLine + "Manage Account Payment Charges Settings:");
+                    manageChargeSettings = await client.ManageAccountPaymentChargesSettingsAsync(manageChargeSettings);
+                    Console.WriteLine(manageChargeSettings.ToJSON());
                 }
                 catch (ApiException e)
                 {
@@ -658,10 +672,6 @@ namespace AllRequests
                     Console.WriteLine(Environment.NewLine + "Find Virtual Accounts:");
                     var findVANs = await client.FindVirtualAccountsAsync();
                     Console.WriteLine(findVANs.ToJSON());
-
-                    Console.WriteLine(Environment.NewLine + "Get Virtual Accounts:");
-                    var getVANs = await client.GetVirtualAccountsAsync(new FindParameters());
-                    Console.WriteLine(getVANs.ToJSON());
                 }
                 catch (ApiException e)
                 {
