@@ -445,6 +445,18 @@ namespace AllRequests
                         findPayments.Payments[2].Id
                     } );
                     Console.WriteLine(authorisePayment.ToJSON());
+
+                    Console.WriteLine(Environment.NewLine + "Get Payment Delivery Date:");
+                    var deliveryDate = await client.GetPaymentDeliveryDatesAsync(new PaymentDeliveryDates
+                    {
+                        PaymentDate = DateTime.Today,
+                        PaymentType = "regular",
+                        Currency = "GBP",
+                        BankCountry = "GB",
+                        PaymentCutoffTime = null,
+                        PaymentDeliveryDate = null
+                    });
+                    Console.WriteLine(deliveryDate.ToJSON());
                 }
                 catch (ApiException e)
                 {
