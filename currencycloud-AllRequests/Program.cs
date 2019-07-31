@@ -521,6 +521,10 @@ namespace AllRequests
                     Console.WriteLine(Environment.NewLine + "Payer Required Details:");
                     var payerDetails = await client.GetPayerRequiredDetailsAsync("GB");
                     Console.WriteLine(payerDetails.ToJSON());
+
+                    Console.WriteLine(Environment.NewLine + "Get Bank Details:");
+                    var bankDetails = await client.GetBankDetailsAsync("iban", "GB19TCCL00997901654515");
+                    Console.WriteLine(bankDetails.ToJSON());
                 }
                 catch (ApiException e)
                 {
