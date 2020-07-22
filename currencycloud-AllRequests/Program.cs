@@ -384,6 +384,24 @@ namespace AllRequests
 
                 #endregion
 
+                #region Funding Accounts API
+
+                try
+                {
+                    Console.WriteLine(Environment.NewLine + "Funding Accounts:");
+                    var getFundingAccounts = await client.FindFundingAccountsAsync( new FundingAccountFindParameters
+                    {
+                        Currency = "GBP"
+                    });
+                    Console.WriteLine(getFundingAccounts.ToJSON());
+                }
+                catch (ApiException e)
+                {
+                    Console.WriteLine("ApiException -> " + e.Message);
+                }
+
+                #endregion
+
                 #region Ibans API
 
                 try
