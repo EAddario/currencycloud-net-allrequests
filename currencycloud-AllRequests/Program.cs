@@ -33,7 +33,8 @@ namespace AllRequests
                 Account subAccount = null;
                 Beneficiary beneficiary = null;
                 Conversion conversion = null;
-                Payment payment = null;
+                Payment paymentPayer = null;
+                Payment paymentConversion = null;
                 Settlement settlement = null;
                 Transaction transaction = null;
 
@@ -119,6 +120,14 @@ namespace AllRequests
                         Console.WriteLine(Environment.NewLine + "Retrieve Balance:");
                         var retrieveBalance = await client.GetBalanceAsync(findBalances.Balances[0].Currency);
                         Console.WriteLine(retrieveBalance.ToJSON());
+
+                        Console.WriteLine(Environment.NewLine + "Top Up Margin Balance:");
+                        foreach (var element in findBalances.Balances)
+                        {
+                            var marginBalanceTopUp =
+                                await client.TopUpMarginBalanceAsync(element.Currency, (element.Amount ?? 0) + 10000);
+                            Console.WriteLine(marginBalanceTopUp.ToJSON());
+                        }
                     }
                 }
                 catch (ApiException e)
@@ -376,6 +385,24 @@ namespace AllRequests
 
                 #endregion
 
+                #region Funding Accounts API
+
+                try
+                {
+                    Console.WriteLine(Environment.NewLine + "Funding Accounts:");
+                    var getFundingAccounts = await client.FindFundingAccountsAsync( new FundingAccountFindParameters
+                    {
+                        Currency = "GBP"
+                    });
+                    Console.WriteLine(getFundingAccounts.ToJSON());
+                }
+                catch (ApiException e)
+                {
+                    Console.WriteLine("ApiException -> " + e.Message);
+                }
+
+                #endregion
+
                 #region Ibans API
 
                 try
@@ -407,10 +434,33 @@ namespace AllRequests
                     var retrievePaymentSubmission = await client.GetPaymentSubmissionAsync(retrievePayment.Id);
                     Console.WriteLine(retrievePaymentSubmission.ToJSON());
 
+                    Console.WriteLine(Environment.NewLine + "Create Payments with Payer:");
+                    paymentPayer = await client.CreatePaymentAsync(new Payment
+                    {
+                        BeneficiaryId = beneficiary.Id,
+                        Currency = "EUR",
+                        Amount = new decimal(123.45),
+                        Reason = "Invoice",
+                        Reference = "CCY-PMT-" + new Random().Next(100, 1000),
+                        UniqueRequestId = Guid.NewGuid().ToString()
+                    }, new Payer
+                        {
+                            Address = "Piazza Museo, n° 19",
+                            LegalEntityType = "individual",
+                            City = "Napoli",
+                            Country = "IT",
+                            IdentificationType = "passport",
+                            IdentificationValue = "23031968",
+                            FirstName = "Francesco",
+                            LastName = "Bianco",
+                            DateOfBirth = new DateTime(1968, 03, 23)
+                        });
+                    Console.WriteLine(paymentPayer.ToJSON());
+
                     if (beneficiary != null && conversion != null)
                     {
-                        Console.WriteLine(Environment.NewLine + "Create Payments:");
-                        payment = await client.CreatePaymentAsync(new Payment
+                        Console.WriteLine(Environment.NewLine + "Create Payments with Conversion:");
+                        paymentConversion = await client.CreatePaymentAsync(new Payment
                         {
                             BeneficiaryId = beneficiary.Id,
                             Currency = conversion.BuyCurrency,
@@ -422,12 +472,12 @@ namespace AllRequests
                             UltimateBeneficiaryName = beneficiary.BankAccountHolderName,
                             UniqueRequestId = Guid.NewGuid().ToString()
                         });
-                        Console.WriteLine(payment.ToJSON());
+                        Console.WriteLine(paymentConversion.ToJSON());
 
                         Console.WriteLine(Environment.NewLine + "Update Payment:");
                         var updatePayment = await client.UpdatePaymentAsync(new Payment
                         {
-                            Id = payment.Id,
+                            Id = paymentConversion.Id,
                             Reference = "CCY-PMT-" + new Random().Next(100, 1000)
                         });
                         Console.WriteLine(updatePayment.ToJSON());
@@ -457,10 +507,34 @@ namespace AllRequests
                         PaymentDeliveryDate = null
                     });
                     Console.WriteLine(deliveryDate.ToJSON());
+
+                    Console.WriteLine(Environment.NewLine + "Get Payment Fee Quote:");
+                    var paymentFeeQuote = await client.GetQuotePaymentFee(new QuotePaymentFee
+                    {
+                        PaymentCurrency = "EUR",
+                        PaymentDestinationCountry = "IT",
+                        PaymentType = "priority"
+                    });
+                    Console.WriteLine(paymentFeeQuote.ToJSON());
                 }
                 catch (ApiException e)
                 {
                     Console.WriteLine("ApiException -> " + e);
+                }
+
+                #endregion
+
+                #region Payers API
+
+                try
+                {
+                    Console.WriteLine(Environment.NewLine + "Retrieve Payers:");
+                    var retrievePayers = await client.GetPayerAsync(paymentPayer.PayerId);
+                    Console.WriteLine(retrievePayers.ToJSON());
+                }
+                catch (ApiException e)
+                {
+                    Console.WriteLine("ApiException -> " + e.Message);
                 }
 
                 #endregion
@@ -525,6 +599,10 @@ namespace AllRequests
                     Console.WriteLine(Environment.NewLine + "Get Bank Details:");
                     var bankDetails = await client.GetBankDetailsAsync("iban", "GB19TCCL00997901654515");
                     Console.WriteLine(bankDetails.ToJSON());
+
+                    Console.WriteLine(Environment.NewLine + "Payment Fee Rules:");
+                    var paymentFeeRules = await client.GetPaymentFeeRulesAsync();
+                    Console.WriteLine(paymentFeeRules.ToJSON());
                 }
                 catch (ApiException e)
                 {
@@ -705,10 +783,17 @@ namespace AllRequests
                     Console.WriteLine(deleteSettlement.ToJSON());
                 }
 
-                if (payment != null)
+                if (paymentPayer != null)
                 {
-                    Console.WriteLine(Environment.NewLine + "Delete Payment:");
-                    var deletePayment = await client.DeletePaymentAsync(payment.Id);
+                    Console.WriteLine(Environment.NewLine + "Delete Payment with Payer:");
+                    var deletePayment = await client.DeletePaymentAsync(paymentPayer.Id);
+                    Console.WriteLine(deletePayment.ToJSON());
+                }
+
+                if (paymentConversion != null)
+                {
+                    Console.WriteLine(Environment.NewLine + "Delete Payment with Conversion:");
+                    var deletePayment = await client.DeletePaymentAsync(paymentConversion.Id);
                     Console.WriteLine(deletePayment.ToJSON());
                 }
 
