@@ -507,6 +507,15 @@ namespace AllRequests
                         PaymentDeliveryDate = null
                     });
                     Console.WriteLine(deliveryDate.ToJSON());
+
+                    Console.WriteLine(Environment.NewLine + "Get Payment Fee Quote:");
+                    var paymentFeeQuote = await client.GetQuotePaymentFee(new QuotePaymentFee
+                    {
+                        PaymentCurrency = "EUR",
+                        PaymentDestinationCountry = "IT",
+                        PaymentType = "priority"
+                    });
+                    Console.WriteLine(paymentFeeQuote.ToJSON());
                 }
                 catch (ApiException e)
                 {
