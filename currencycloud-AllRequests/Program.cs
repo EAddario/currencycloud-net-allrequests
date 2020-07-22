@@ -33,7 +33,8 @@ namespace AllRequests
                 Account subAccount = null;
                 Beneficiary beneficiary = null;
                 Conversion conversion = null;
-                Payment payment = null;
+                Payment paymentPayer = null;
+                Payment paymentConversion = null;
                 Settlement settlement = null;
                 Transaction transaction = null;
 
@@ -434,7 +435,7 @@ namespace AllRequests
                     Console.WriteLine(retrievePaymentSubmission.ToJSON());
 
                     Console.WriteLine(Environment.NewLine + "Create Payments with Payer:");
-                    payment = await client.CreatePaymentAsync(new Payment
+                    paymentPayer = await client.CreatePaymentAsync(new Payment
                     {
                         BeneficiaryId = beneficiary.Id,
                         Currency = "EUR",
@@ -454,12 +455,12 @@ namespace AllRequests
                             LastName = "Bianco",
                             DateOfBirth = new DateTime(1968, 03, 23)
                         });
-                    Console.WriteLine(payment.ToJSON());
+                    Console.WriteLine(paymentPayer.ToJSON());
 
                     if (beneficiary != null && conversion != null)
                     {
                         Console.WriteLine(Environment.NewLine + "Create Payments with Conversion:");
-                        payment = await client.CreatePaymentAsync(new Payment
+                        paymentConversion = await client.CreatePaymentAsync(new Payment
                         {
                             BeneficiaryId = beneficiary.Id,
                             Currency = conversion.BuyCurrency,
@@ -471,12 +472,12 @@ namespace AllRequests
                             UltimateBeneficiaryName = beneficiary.BankAccountHolderName,
                             UniqueRequestId = Guid.NewGuid().ToString()
                         });
-                        Console.WriteLine(payment.ToJSON());
+                        Console.WriteLine(paymentConversion.ToJSON());
 
                         Console.WriteLine(Environment.NewLine + "Update Payment:");
                         var updatePayment = await client.UpdatePaymentAsync(new Payment
                         {
-                            Id = payment.Id,
+                            Id = paymentConversion.Id,
                             Reference = "CCY-PMT-" + new Random().Next(100, 1000)
                         });
                         Console.WriteLine(updatePayment.ToJSON());
@@ -510,6 +511,21 @@ namespace AllRequests
                 catch (ApiException e)
                 {
                     Console.WriteLine("ApiException -> " + e);
+                }
+
+                #endregion
+
+                #region Payers API
+
+                try
+                {
+                    Console.WriteLine(Environment.NewLine + "Retrieve Payers:");
+                    var retrievePayers = await client.GetPayerAsync(paymentPayer.PayerId);
+                    Console.WriteLine(retrievePayers.ToJSON());
+                }
+                catch (ApiException e)
+                {
+                    Console.WriteLine("ApiException -> " + e.Message);
                 }
 
                 #endregion
@@ -754,10 +770,17 @@ namespace AllRequests
                     Console.WriteLine(deleteSettlement.ToJSON());
                 }
 
-                if (payment != null)
+                if (paymentPayer != null)
                 {
-                    Console.WriteLine(Environment.NewLine + "Delete Payment:");
-                    var deletePayment = await client.DeletePaymentAsync(payment.Id);
+                    Console.WriteLine(Environment.NewLine + "Delete Payment with Payer:");
+                    var deletePayment = await client.DeletePaymentAsync(paymentPayer.Id);
+                    Console.WriteLine(deletePayment.ToJSON());
+                }
+
+                if (paymentConversion != null)
+                {
+                    Console.WriteLine(Environment.NewLine + "Delete Payment with Conversion:");
+                    var deletePayment = await client.DeletePaymentAsync(paymentConversion.Id);
                     Console.WriteLine(deletePayment.ToJSON());
                 }
 
