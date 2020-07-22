@@ -13,8 +13,8 @@ namespace AllRequests
         static void Main(string[] args)
         {
             /* ToDo: Reverse commenting to run chosen subset of calls only */
-            MainAsync(args[0], args[1]).Wait();
-            //QuickTest.MainAsync(args[0], args[1]).Wait();
+            //MainAsync(args[0], args[1]).Wait();
+            QuickTest.MainAsync(args[0], args[1]).Wait();
         }
 
         static async Task MainAsync(string loginId, string apiKey)
@@ -119,6 +119,14 @@ namespace AllRequests
                         Console.WriteLine(Environment.NewLine + "Retrieve Balance:");
                         var retrieveBalance = await client.GetBalanceAsync(findBalances.Balances[0].Currency);
                         Console.WriteLine(retrieveBalance.ToJSON());
+
+                        Console.WriteLine(Environment.NewLine + "Top Up Margin Balance:");
+                        foreach (var element in findBalances.Balances)
+                        {
+                            var marginBalanceTopUp =
+                                await client.TopUpMarginBalanceAsync(element.Currency, (element.Amount ?? 0) + 10000);
+                            Console.WriteLine(marginBalanceTopUp.ToJSON());
+                        }
                     }
                 }
                 catch (ApiException e)
