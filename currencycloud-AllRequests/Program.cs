@@ -599,6 +599,10 @@ namespace AllRequests
                     Console.WriteLine(Environment.NewLine + "Get Bank Details:");
                     var bankDetails = await client.GetBankDetailsAsync("iban", "GB19TCCL00997901654515");
                     Console.WriteLine(bankDetails.ToJSON());
+
+                    Console.WriteLine(Environment.NewLine + "Payment Fee Rules:");
+                    var paymentFeeRules = await client.GetPaymentFeeRulesAsync();
+                    Console.WriteLine(paymentFeeRules.ToJSON());
                 }
                 catch (ApiException e)
                 {
