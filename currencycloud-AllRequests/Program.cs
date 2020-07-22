@@ -433,9 +433,32 @@ namespace AllRequests
                     var retrievePaymentSubmission = await client.GetPaymentSubmissionAsync(retrievePayment.Id);
                     Console.WriteLine(retrievePaymentSubmission.ToJSON());
 
+                    Console.WriteLine(Environment.NewLine + "Create Payments with Payer:");
+                    payment = await client.CreatePaymentAsync(new Payment
+                    {
+                        BeneficiaryId = beneficiary.Id,
+                        Currency = "EUR",
+                        Amount = new decimal(123.45),
+                        Reason = "Invoice",
+                        Reference = "CCY-PMT-" + new Random().Next(100, 1000),
+                        UniqueRequestId = Guid.NewGuid().ToString()
+                    }, new Payer
+                        {
+                            Address = "Piazza Museo, n° 19",
+                            LegalEntityType = "individual",
+                            City = "Napoli",
+                            Country = "IT",
+                            IdentificationType = "passport",
+                            IdentificationValue = "23031968",
+                            FirstName = "Francesco",
+                            LastName = "Bianco",
+                            DateOfBirth = new DateTime(1968, 03, 23)
+                        });
+                    Console.WriteLine(payment.ToJSON());
+
                     if (beneficiary != null && conversion != null)
                     {
-                        Console.WriteLine(Environment.NewLine + "Create Payments:");
+                        Console.WriteLine(Environment.NewLine + "Create Payments with Conversion:");
                         payment = await client.CreatePaymentAsync(new Payment
                         {
                             BeneficiaryId = beneficiary.Id,
